@@ -4,7 +4,7 @@ const {
   createFolder,
   getMyFolders,
   getFolderById,
-  updateFolder,
+  updateFolder,  
   deleteFolder,
 } = require("../controllers/folderController");
 const { protect } = require("../middleware/authMiddleware");
