@@ -67,7 +67,7 @@ const startServer = async () => {
     console.log(`Local: http://localhost:${PORT}`);
     console.log(`Network: http://0.0.0.0:${PORT} (use your computer's IP)`);
   });
-};
+};  
 
 startServer();
  
