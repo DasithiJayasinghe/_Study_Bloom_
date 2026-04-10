@@ -225,7 +225,7 @@ const updateHelpRequestStatus = async (req, res) => {
     if (request.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         message: "Not authorized to update this help request status",
-      });
+      }); 
     }
 
     // Request should be accepted before resolving
