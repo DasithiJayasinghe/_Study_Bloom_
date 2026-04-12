@@ -9,6 +9,8 @@ const {
     addComment,
     getComments,
     deleteComment,
+    votePost,
+    votePoll,
 } = require("../controllers/communityController");
 const { protect } = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
@@ -25,4 +27,12 @@ router.post("/posts/:id/comments", protect, upload.single("attachment"), addComm
 router.get("/posts/:id/comments", protect, getComments);
 router.delete("/posts/:id/comments/:commentId", protect, deleteComment);
 
+// Vote routes
+router.post("/posts/:id/vote", protect, votePost);
+
+// Poll vote routes
+router.post("/posts/:id/poll-vote", protect, votePoll);
+
 module.exports = router;
+
+
