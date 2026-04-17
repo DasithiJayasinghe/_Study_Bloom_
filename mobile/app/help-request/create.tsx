@@ -601,11 +601,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 32,
   },
+  
   submitButtonText: {
     color: COLORS.white,
     fontSize: 18,
     fontWeight: '800',
   },
+
   cancelButton: {
     borderWidth: 1.5,
     borderColor: '#E5BBC6',

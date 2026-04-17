@@ -157,7 +157,7 @@ export const folderService = {
     const data = await parseJsonSafely(response);
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to fetch folder requests');
+      throw new Error(data.message || 'Failed to fetch folder requests.');
     }
 
     return Array.isArray(data)
