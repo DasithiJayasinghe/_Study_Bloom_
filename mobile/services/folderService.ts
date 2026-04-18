@@ -135,7 +135,7 @@ export const folderService = {
     const data = text ? JSON.parse(text) : {};
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to delete folder');
+      throw new Error(data.message || 'Failed to delete folder.');
     }
   },
 

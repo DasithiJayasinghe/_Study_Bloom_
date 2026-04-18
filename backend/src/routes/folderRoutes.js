@@ -7,7 +7,7 @@ const {
   updateFolder,  
   deleteFolder,
 } = require("../controllers/folderController");
-const { protect } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware" );
 
 router.post("/", protect, createFolder);
 router.get("/my", protect, getMyFolders);

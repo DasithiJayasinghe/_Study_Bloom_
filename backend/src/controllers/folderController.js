@@ -132,7 +132,7 @@ const deleteFolder = async (req, res) => {
 
     await folder.deleteOne();
 
-    res.status(200).json({ message: 'Folder deleted successfully' });
+    res.status(200).json({ message: 'Folder deleted successfully.' });
   } catch (error) {
     res.status(500).json({
       message: 'Failed to delete folder',
