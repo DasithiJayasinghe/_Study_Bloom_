@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const blossomRoutes = require('./routes/blossomRoutes');
 const { protect } = require('./middleware/authMiddleware');
 
 // Load backend/.env explicitly so this works from workspace root.
@@ -27,6 +28,7 @@ app.get('/api/health', (req, res) => {
 // Auth routes
 console.log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
+app.use('/api/blossom', blossomRoutes);
 console.log('Auth routes mounted successfully');
 
 // Dev route - list all users (remove in production)
