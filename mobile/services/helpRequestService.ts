@@ -129,7 +129,7 @@ export const helpRequestService = {
     const data = text ? JSON.parse(text) : {};
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to create help request');
+      throw new Error(data.message || 'Failed to create help request.');
     }
 
     return data;
