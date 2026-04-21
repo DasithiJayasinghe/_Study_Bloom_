@@ -44,8 +44,7 @@ export default function CreateFolderScreen() {
             });
             router.back();
         } catch (error) {
-            Alert.alert('Error', 'Failed to create folder. Please try again.');
-            console.error('Create folder error:', error);
+            Alert.alert('Error', error instanceof Error ? error.message : 'Failed to create folder. Please try again.');
         } finally {
             setIsCreating(false);
         }
