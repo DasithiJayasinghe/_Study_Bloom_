@@ -218,7 +218,7 @@ const updateHelpRequestStatus = async (req, res) => {
     const request = await HelpRequest.findById(req.params.id);
 
     if (!request || request.status === "deleted") {
-      return res.status(404).json({ message: "Help request not found" });
+      return res.status(404).json({ message: "Help request not found." });
     }
 
     // Only request owner can mark as resolved.

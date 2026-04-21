@@ -153,7 +153,7 @@ export const helpRequestService = {
     const data = text ? JSON.parse(text) : {};
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to delete help request');
+      throw new Error(data.message || 'Failed to delete help request.');
     }
   },
 
