@@ -42,6 +42,7 @@ const COLORS = {
     error: '#b31b25',
 };
 
+// Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
@@ -156,9 +157,11 @@ export default function CommunityFeedScreen() {
     };
 
     const handleVote = async (postId: string, type: 'upvote' | 'downvote') => {
+        // Subtle pop feel
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
 
+        // Optimistic update — instant UI feedback
         setPosts((prev) =>
             prev.map((p) => {
                 if (p._id !== postId) return p;
@@ -176,6 +179,7 @@ export default function CommunityFeedScreen() {
                 } as Post;
             })
         );
+        // Background sync — silently correct if needed
         try {
             const result = await communityService.votePost(postId, type);
             setPosts((prev) =>
@@ -187,6 +191,7 @@ export default function CommunityFeedScreen() {
             );
         } catch (error) {
             console.error('Error voting:', error);
+            // Reload on error to get correct state
             loadPosts(true);
         }
     };
@@ -209,20 +214,25 @@ export default function CommunityFeedScreen() {
     const showSnackbarAction = (type: 'hide' | 'delete', post: Post) => {
         setMenuPost(null);
 
+        // Cancel any existing pending action
         if (pendingAction) {
             clearTimeout(pendingAction.timer);
+            // Execute the previous action immediately if it was a delete
             if (pendingAction.type === 'delete') {
                 communityService.deletePost(pendingAction.post._id).catch(console.error);
             }
         }
 
+        // Immediately hide from feed
         setHiddenPosts(prev => new Set(prev).add(post._id));
 
+        // Show snackbar
         Animated.parallel([
             Animated.timing(snackbarOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
             Animated.timing(fabOffset, { toValue: 70, duration: 200, useNativeDriver: true })
         ]).start();
 
+        // Set timer — when it expires, finalize the action
         const timer = setTimeout(() => {
             Animated.parallel([
                 Animated.timing(snackbarOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
@@ -248,6 +258,7 @@ export default function CommunityFeedScreen() {
     const undoAction = () => {
         if (!pendingAction) return;
         clearTimeout(pendingAction.timer);
+        // Restore post visibility
         setHiddenPosts(prev => {
             const next = new Set(prev);
             next.delete(pendingAction.post._id);
@@ -279,20 +290,6 @@ export default function CommunityFeedScreen() {
             } as any);
         }, 100);
     };
-
-
-    const renderSkeletonChips = () => (
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterChips}
-            style={styles.filterChipsRow}
-        >
-            {[72, 96, 64, 80, 88].map((_, i) => (
-                <View key={i} style={styles.skeletonChip} />
-            ))}
-        </ScrollView>
-    );
 
     const renderPostCard = ({ item }: { item: Post }) => {
         const badge = TYPE_BADGE_STYLES[item.type] || TYPE_BADGE_STYLES.question;
@@ -328,7 +325,7 @@ export default function CommunityFeedScreen() {
                     ) : null}
                 </TouchableOpacity>
 
-                {/* Attachment Preview */}
+                {/* Attachment Preview — outside Pressable so it doesn't nav */}
                 {imageUrl && isImage ? (
                     <TouchableOpacity
                         activeOpacity={0.9}
@@ -355,6 +352,7 @@ export default function CommunityFeedScreen() {
                         <MaterialIcons name="download" size={18} color={COLORS.primary} />
                     </TouchableOpacity>
                 ) : null}
+
 
                 {/* Subject */}
                 {item.subject ? (
@@ -485,43 +483,42 @@ export default function CommunityFeedScreen() {
                 </View>
             </View>
 
-            {loading ? renderSkeletonChips() : (
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filterChips}
-                    style={styles.filterChipsRow}
-                >
-                    {FILTER_OPTIONS.map((filter) => {
-                        const isActive = activeFilter === filter;
-                        return (
-                            <TouchableOpacity
-                                key={filter}
-                                activeOpacity={0.7}
-                                onPress={() => {
-                                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                    setActiveFilter(filter);
-                                }}
-                            >
-                                {isActive ? (
-                                    <LinearGradient
-                                        colors={[COLORS.gradientStart, COLORS.gradientEnd]}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 0 }}
-                                        style={styles.chipActive}
-                                    >
-                                        <Text style={styles.chipActiveText}>{filter}</Text>
-                                    </LinearGradient>
-                                ) : (
-                                    <View style={styles.chipInactive}>
-                                        <Text style={styles.chipInactiveText}>{filter}</Text>
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        );
-                    })}
-                </ScrollView>
-            )}
+            {/* Filter Chips */}
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterChips}
+                style={styles.filterChipsRow}
+            >
+                {FILTER_OPTIONS.map((filter) => {
+                    const isActive = activeFilter === filter;
+                    return (
+                        <TouchableOpacity
+                            key={filter}
+                            activeOpacity={0.7}
+                            onPress={() => {
+                                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                setActiveFilter(filter);
+                            }}
+                        >
+                            {isActive ? (
+                                <LinearGradient
+                                    colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={styles.chipActive}
+                                >
+                                    <Text style={styles.chipActiveText}>{filter}</Text>
+                                </LinearGradient>
+                            ) : (
+                                <View style={styles.chipInactive}>
+                                    <Text style={styles.chipInactiveText}>{filter}</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
 
             {/* Posts List */}
             <View style={styles.contentArea}>
@@ -564,6 +561,19 @@ export default function CommunityFeedScreen() {
                     >
                         <MaterialIcons name="add" size={28} color="#ffffff" />
                     </LinearGradient>
+                </TouchableOpacity>
+            </Animated.View>
+
+            {/* Undo Snackbar */}
+            <Animated.View
+                style={[styles.snackbar, { opacity: snackbarOpacity }]}
+                pointerEvents={pendingAction ? 'auto' : 'none'}
+            >
+                <Text style={styles.snackbarText}>
+                    {pendingAction?.type === 'delete' ? 'Post deleted' : 'Post hidden'}
+                </Text>
+                <TouchableOpacity onPress={undoAction}>
+                    <Text style={styles.snackbarUndo}>UNDO</Text>
                 </TouchableOpacity>
             </Animated.View>
 
@@ -701,14 +711,6 @@ const styles = StyleSheet.create({
         color: COLORS.onSurfaceVariant,
         fontWeight: '600',
         fontSize: 13,
-    },
-
-    skeletonChip: {
-        minWidth: 64,
-        height: 38,
-        borderRadius: 8,
-        backgroundColor: COLORS.surfaceContainerHigh,
-        opacity: 0.7,
     },
     contentArea: {
         flex: 1,
@@ -1006,6 +1008,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         letterSpacing: 0.5,
     },
+    // Action Sheet Modal
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.45)',
