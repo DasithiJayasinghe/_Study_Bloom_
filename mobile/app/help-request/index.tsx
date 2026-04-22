@@ -210,6 +210,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',

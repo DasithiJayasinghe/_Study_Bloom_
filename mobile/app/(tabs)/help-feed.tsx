@@ -313,6 +313,7 @@ const styles = StyleSheet.create({
     marginBottom: 26,
     position: 'relative',
   },
+
   cardWrapPressed: {
     transform: [{ scale: 0.985 }],
     opacity: 0.96,
@@ -331,6 +332,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     elevation: 2,
   },
+  
   cloudBackMain: {
     borderTopLeftRadius: 90,
     borderTopRightRadius: 120,

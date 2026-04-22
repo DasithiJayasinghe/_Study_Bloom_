@@ -124,7 +124,7 @@ export default function FolderDetailScreen() {
 
   const handleRenameFolder = async () => {
     if (!folderName.trim()) {
-      Alert.alert('Validation', 'Folder name is required');
+      Alert.alert('Validation', 'Folder name is required.');
       return;
     }
 
