@@ -225,12 +225,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 2,
   },
+
   createBox: {
     borderRadius: 24,
     padding: 30,
     alignItems: 'center',
     marginBottom: 20,
   },
+  
   createText: {
     color: '#fff',
     fontSize: 18,

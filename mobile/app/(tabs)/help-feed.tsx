@@ -97,7 +97,7 @@ function FeedCard({
 
           {item.isUrgent ? (
             <View style={styles.urgentBadge}>
-              <Ionicons name="alert-circle" size={12} color={COLORS.urgentText} />
+              <Ionicons name="alert-circle" size={12} color={COLORS.urgentText}/>
               <Text style={styles.urgentText}>URGENT</Text>
             </View>
           ) : (
