@@ -57,6 +57,11 @@ exports.getAllPosts = async (req, res) => {
             ];
         }
 
+        // Filter to current user's posts only
+        if (req.query.mine === "true") {
+            filter.user = req.user._id;
+        }
+
         if (type && type !== "all") {
             filter.type = type.toLowerCase();
         }
