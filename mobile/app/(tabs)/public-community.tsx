@@ -47,7 +47,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const FILTER_OPTIONS = ['All', 'Questions', 'Materials', 'Polls', 'Discussion'];
+const FILTER_OPTIONS = ['All', 'Questions', 'Materials', 'Polls', 'Discussion', 'My Posts'];
 
 const TYPE_BADGE_STYLES: Record<string, { bg: string; text: string }> = {
     question: { bg: 'rgba(255,141,178,0.2)', text: '#9f345d' },
@@ -112,7 +112,7 @@ export default function CommunityFeedScreen() {
             else setRefreshing(true);
 
             const filterType =
-                activeFilter === 'All'
+                activeFilter === 'All' || activeFilter === 'My Posts'
                     ? undefined
                     : activeFilter === 'Questions' ? 'question'
                         : activeFilter === 'Materials' ? 'material'
@@ -120,9 +120,12 @@ export default function CommunityFeedScreen() {
                                 : activeFilter === 'Discussion' ? 'discussion'
                                     : undefined;
 
+            const isMine = activeFilter === 'My Posts';
+
             const data = await communityService.getPosts({
                 type: filterType,
                 search: searchQuery || undefined,
+                mine: isMine,
             });
             setPosts(data);
         } catch (error) {
