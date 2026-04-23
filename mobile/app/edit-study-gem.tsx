@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -12,9 +12,10 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { studySpaceService, StudyGem, Folder } from '../services/studySpaceService';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,6 +48,24 @@ export default function EditStudyGemScreen() {
             loadData(id);
         }
     }, [id]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const fetchFolders = async () => {
+                try {
+                    const fetchedFolders = await studySpaceService.getFolders();
+                    setFolders(fetchedFolders);
+                } catch (error) {
+                    console.error('Failed to refresh folders:', error);
+                }
+            };
+            
+            // Wait for initial load to finish to avoid double flashing
+            if (!isLoading) {
+                fetchFolders();
+            }
+        }, [isLoading])
+    );
 
     const loadData = async (gemId: string) => {
         try {
@@ -119,6 +138,7 @@ export default function EditStudyGemScreen() {
                 description,
                 notes,
                 folderId: selectedFolder?._id,
+                ...( { folder: selectedFolder?._id } as any ),
                 tags: tags.split(',').map(t => t.trim()).filter(t => t !== ''),
                 attachments: attachments.map(a => ({
                     name: a.name,
@@ -144,6 +164,7 @@ export default function EditStudyGemScreen() {
     }
 
     return (
+        <KeyboardAvoidingView style={{ flex: 1, backgroundColor: SCREEN_BG }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
@@ -157,7 +178,15 @@ export default function EditStudyGemScreen() {
                 />
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                contentContainerStyle={styles.scrollContent} 
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                onScroll={() => {
+                    if (showDropdown) setShowDropdown(false);
+                }}
+                scrollEventThrottle={16}
+            >
                 {/* Form Fields */}
                 <View style={styles.formSection}>
                     <Text style={styles.inputLabel}>ENTRY TITLE</Text>
@@ -205,33 +234,33 @@ export default function EditStudyGemScreen() {
                     <TouchableOpacity style={styles.newFolderBtn} onPress={() => router.push('/create-folder')}>
                         <Text style={styles.newFolderText}>+ New</Text>
                     </TouchableOpacity>
-                </View>
 
-                {/* Dropdown Menu */}
-                {showDropdown && (
-                    <View style={styles.dropdownMenu}>
-                        {folders.map((folder) => (
-                            <TouchableOpacity
-                                key={folder._id}
-                                style={[
-                                    styles.dropdownItem,
-                                    selectedFolder?._id === folder._id && styles.dropdownItemActive
-                                ]}
-                                onPress={() => {
-                                    setSelectedFolder(folder);
-                                    setShowDropdown(false);
-                                }}
-                            >
-                                <Text style={[
-                                    styles.dropdownItemText,
-                                    selectedFolder?._id === folder._id && styles.dropdownItemTextActive
-                                ]}>
-                                    {folder.icon} {folder.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
+                    {/* Dropdown Menu */}
+                    {showDropdown && (
+                        <View style={styles.dropdownMenu}>
+                            {folders.map((folder) => (
+                                <TouchableOpacity
+                                    key={folder._id}
+                                    style={[
+                                        styles.dropdownItem,
+                                        selectedFolder?._id === folder._id && styles.dropdownItemActive
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedFolder(folder);
+                                        setShowDropdown(false);
+                                    }}
+                                >
+                                    <Text style={[
+                                        styles.dropdownItemText,
+                                        selectedFolder?._id === folder._id && styles.dropdownItemTextActive
+                                    ]}>
+                                        {folder.icon} {folder.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                </View>
 
                 {/* Tags */}
                 <Text style={styles.inputLabel}>TAGS</Text>
@@ -314,6 +343,7 @@ export default function EditStudyGemScreen() {
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -379,60 +409,69 @@ const styles = StyleSheet.create({
     },
     folderRow: {
         flexDirection: 'row',
-        gap: 12,
-        marginBottom: 10,
+        alignItems: 'center',
+        marginBottom: 20,
+        position: 'relative',
+        zIndex: 1000,
     },
     folderDropdown: {
-        flex: 2,
+        flex: 1,
+        backgroundColor: INPUT_BG,
+        borderRadius: 18,
+        padding: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: INPUT_BG,
-        borderRadius: 25,
-        paddingHorizontal: 20,
-        paddingVertical: 15,
+        marginRight: 12,
     },
     dropdownMenu: {
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 10,
-        marginBottom: 20,
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 80, // Accounts for newFolderButton
+        backgroundColor: 'white', // Bright background for contrast
+        borderRadius: 18,
+        padding: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
+        shadowOpacity: 0.1,
         shadowRadius: 10,
-        elevation: 3,
+        elevation: 5,
+        zIndex: 1001,
     },
     dropdownItem: {
-        padding: 12,
-        borderRadius: 10,
+        padding: 14,
+        borderRadius: 12,
     },
     dropdownItemActive: {
-        backgroundColor: '#F7E7F7',
+        backgroundColor: '#FBF2FB',
     },
     dropdownItemText: {
         fontSize: 14,
         color: TEXT_DARK,
+        fontWeight: '500',
     },
     dropdownItemTextActive: {
         color: ACCENT_PINK,
         fontWeight: '700',
     },
     folderText: {
-        fontSize: 15,
         color: TEXT_DARK,
+        fontSize: 14,
+        fontWeight: '500',
     },
     newFolderBtn: {
-        flex: 1,
-        backgroundColor: '#EFE3F2',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: '#F1D9E7',
+        borderStyle: 'dashed',
+        borderRadius: 18,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
     },
     newFolderText: {
-        color: '#9C27B0',
-        fontWeight: '700',
-        fontSize: 15,
+        color: SECONDARY_TEXT,
+        fontSize: 14,
+        fontWeight: '500',
     },
     saveButton: {
         backgroundColor: ACCENT_PINK,
