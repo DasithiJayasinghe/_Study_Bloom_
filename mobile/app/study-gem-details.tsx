@@ -81,6 +81,28 @@ export default function StudyGemDetailsScreen() {
         );
     };
 
+    const handleOptionsMenu = () => {
+        Alert.alert(
+            'Options',
+            'What would you like to do? ✨',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Edit Gem',
+                    onPress: () => router.push({
+                        pathname: '/edit-study-gem',
+                        params: { id: gem._id }
+                    })
+                },
+                {
+                    text: 'Delete Gem',
+                    onPress: handleDelete,
+                    style: 'destructive'
+                }
+            ]
+        );
+    };
+
     const handleViewAttachment = async (url: string, fileName: string, fileType?: string) => {
         const isImage = (fileType && fileType.startsWith('image/')) || 
                         fileName.match(/\.(jpg|jpeg|png|gif)$/i) || 
@@ -116,7 +138,7 @@ export default function StudyGemDetailsScreen() {
                     <Ionicons name="arrow-back" size={24} color={ACCENT_PINK} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Study Gem Details 💎</Text>
-                <TouchableOpacity style={styles.menuButton} onPress={() => { }}>
+                <TouchableOpacity style={styles.menuButton} onPress={handleOptionsMenu}>
                     <Ionicons name="ellipsis-vertical" size={24} color={ACCENT_PINK} />
                 </TouchableOpacity>
             </View>
@@ -149,6 +171,34 @@ export default function StudyGemDetailsScreen() {
                     {gem.description ? (
                         <Text style={styles.gemDescription}>{gem.description}</Text>
                     ) : null}
+
+                    {/* Community Selected Answer Mockup */}
+                    {gem.type === 'community' && (
+                        <>
+                            <View style={styles.communityPreviewHeader}>
+                                <MaterialIcons name="chat-bubble" size={20} color={ACCENT_PINK} />
+                                <Text style={styles.communityPreviewTitle}>SELECTED ANSWER 💬</Text>
+                            </View>
+                            
+                            <View style={styles.previewCard}>
+                                <Text style={styles.previewQuestion}>
+                                    What is the best way to visualize recursion?
+                                </Text>
+                                
+                                <View style={styles.previewAuthorRow}>
+                                    <Image 
+                                        source={{ uri: 'https://i.pravatar.cc/100?img=9' }}
+                                        style={styles.previewAuthorPic}
+                                    />
+                                    <Text style={styles.previewAuthorName}>Sophia G.</Text>
+                                </View>
+
+                                <Text style={styles.previewText}>
+                                    I find it helpful to draw out the call stack as a physical tower. Imagine each function call is a new brick being laid on top of the previous one. When the base case is reached, you start removing them... <Text style={styles.readMoreText}>Read more</Text>
+                                </Text>
+                            </View>
+                        </>
+                    )}
 
                     {/* Nested Notes Card */}
                     {gem.notes ? (
@@ -204,22 +254,7 @@ export default function StudyGemDetailsScreen() {
                     </>
                 )}
 
-                {/* Footer Actions */}
-                <View style={styles.footerActions}>
-                    <TouchableOpacity
-                        style={styles.editButton}
-                        onPress={() => router.push({
-                            pathname: '/edit-study-gem',
-                            params: { id: gem._id }
-                        })}
-                    >
-                        <Ionicons name="pencil" size={18} color="white" />
-                        <Text style={styles.editButtonText}>Edit Gem</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                        <Text style={styles.deleteButtonText}>Delete</Text>
-                    </TouchableOpacity>
-                </View>
+
             </ScrollView>
 
             {/* In-App Image Viewer Modal */}
@@ -423,6 +458,61 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         color: '#4E342E',
+    },
+    // Community Preview Styles
+    communityPreviewHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 5,
+        marginBottom: 12,
+        marginTop: 10,
+    },
+    communityPreviewTitle: {
+        marginLeft: 8,
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#4A2143',
+        letterSpacing: 1,
+    },
+    previewCard: {
+        backgroundColor: '#F8EFF8',
+        borderRadius: 30,
+        padding: 24,
+        marginBottom: 20,
+    },
+    previewQuestion: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        lineHeight: 26,
+        marginBottom: 16,
+    },
+    previewAuthorRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    previewAuthorPic: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        marginRight: 10,
+        borderWidth: 2,
+        borderColor: '#E6D3E6',
+    },
+    previewAuthorName: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#9E328A',
+    },
+    previewText: {
+        fontSize: 15,
+        color: '#665766',
+        lineHeight: 24,
+    },
+    readMoreText: {
+        fontWeight: '700',
+        color: ACCENT_PINK,
     },
     attachmentsGrid: {
         flexDirection: 'row',
