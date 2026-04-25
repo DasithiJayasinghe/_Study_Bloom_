@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   Dimensions,
@@ -12,10 +11,19 @@ import {
   Modal,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StudyBloomColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { notificationService } from '@/services/notificationService';
+import { useExams } from '@/contexts/ExamContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { helpRequestService } from '@/services/helpRequestService';
+import { useBlossomTasks } from '@/contexts/BlossomTasksContext';
+import { blossomApi } from '@/services/blossomApi';
+import { localDateKey } from '@/utils/localDateKey';
+import { studySpaceService } from '@/services/studySpaceService';
 
 const moodMessages: Record<string, { title: string; message: string; color: string }> = {
   Happy: {
@@ -49,8 +57,115 @@ const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const { user, logout, isAuthenticated, profileImage } = useAuth();
+  const { exams, fetchExams } = useExams();
+  const { tasks } = useBlossomTasks();
+  const completedTasksCount = useMemo(() => tasks.filter((t) => t.done).length, [tasks]);
+  const [dailyExpenseCount, setDailyExpenseCount] = useState(0);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [showMoodModal, setShowMoodModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [studyHours, setStudyHours] = useState('0h');
+
+  const loadTodayExpenseCount = useCallback(async () => {
+    if (!isAuthenticated) {
+      setDailyExpenseCount(0);
+      return;
+    }
+    try {
+      const { entries } = await blossomApi.getExpenses(localDateKey());
+      setDailyExpenseCount(entries.length);
+    } catch {
+      setDailyExpenseCount(0);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    void loadTodayExpenseCount();
+  }, [loadTodayExpenseCount]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadTodayExpenseCount();
+    }, [loadTodayExpenseCount])
+  );
+
+  // Check for notifications and upcoming exams on focus
+  useFocusEffect(
+    useCallback(() => {
+      const checkNotifications = async () => {
+        try {
+          // Request permissions
+          await notificationService.requestPermissions();
+
+          // Check for upcoming exams and add notifications
+          if (exams.length > 0) {
+            await notificationService.checkUpcomingExams(exams);
+          }
+
+          // Help request accepted notifications sync
+          const myHelpRequests = await helpRequestService.getMyHelpRequests();
+          await notificationService.checkAcceptedHelpRequestNotifications(myHelpRequests);
+
+          const count = await notificationService.getUnreadCount();
+          setUnreadCount(count);
+        } catch (error) {
+          console.log('Notification sync error:', error);
+
+          // Get unread count
+          const count = await notificationService.getUnreadCount();
+          setUnreadCount(count);
+        }
+      };
+
+      if (isAuthenticated) {
+        checkNotifications();
+      }
+    }, [isAuthenticated, exams])
+  );
+
+  // Fetch exams when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchExams();
+    }
+  }, [isAuthenticated, fetchExams]);
+
+  const loadStudyStats = useCallback(async () => {
+    if (!isAuthenticated) {
+      setStudyHours('0h');
+      return;
+    }
+    try {
+      const stats = await studySpaceService.getSessionStats();
+      
+      const totalSeconds = stats.todayTotalSeconds || 0;
+      if (totalSeconds === 0) {
+        setStudyHours('0h');
+      } else if (totalSeconds < 3600) {
+        const mins = Math.floor(totalSeconds / 60);
+        setStudyHours(`${mins}m`);
+      } else {
+        const hours = totalSeconds / 3600;
+        setStudyHours(`${hours.toFixed(1)}h`);
+      }
+    } catch (error) {
+      console.log('Error loading study stats:', error);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    void loadStudyStats();
+  }, [loadStudyStats]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadStudyStats();
+    }, [loadStudyStats])
+  );
+
+  const handleNotificationPress = () => {
+    router.push('/notifications');
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -115,9 +230,13 @@ export default function HomeScreen() {
             <Text style={styles.userName}>{firstName}!</Text>
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.notificationBtn}>
+            <TouchableOpacity style={styles.notificationBtn} onPress={handleNotificationPress}>
               <Ionicons name="notifications-outline" size={22} color={StudyBloomColors.primary} />
-              <View style={styles.notificationBadge} />
+              {unreadCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <TouchableOpacity style={styles.profileAvatar} onPress={() => router.push('/(tabs)/profile')}>
               {profileImage ? (
@@ -145,11 +264,7 @@ export default function HomeScreen() {
             <View style={styles.bannerContent}>
               <View style={styles.bannerTextSection}>
                 <Text style={styles.bannerTitle}>Keep Blooming!</Text>
-                <Text style={styles.bannerSubtitle}>You're doing amazing sweetie</Text>
-                <View style={styles.streakBadge}>
-                  <Ionicons name="flame" size={16} color="#FF6B6B" />
-                  <Text style={styles.streakText}>0 day streak</Text>
-                </View>
+                <Text style={styles.bannerSubtitle}>You are doing amazing sweetie</Text>
               </View>
               <View style={styles.bannerIllustration}>
                 <View style={styles.flowerBig}>
@@ -178,14 +293,14 @@ export default function HomeScreen() {
             <View style={[styles.quickStatIcon, { backgroundColor: '#FFE5EC' }]}>
               <Ionicons name="checkmark-done" size={22} color={StudyBloomColors.primary} />
             </View>
-            <Text style={styles.quickStatNumber}>0</Text>
-            <Text style={styles.quickStatLabel}>Tasks</Text>
+            <Text style={styles.quickStatNumber}>{completedTasksCount}</Text>
+            <Text style={styles.quickStatLabel}>Tasks done</Text>
           </View>
           <View style={styles.quickStatCard}>
             <View style={[styles.quickStatIcon, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="time" size={22} color="#4CAF50" />
             </View>
-            <Text style={styles.quickStatNumber}>0h</Text>
+            <Text style={styles.quickStatNumber}>{studyHours}</Text>
             <Text style={styles.quickStatLabel}>Study</Text>
           </View>
           <View style={styles.quickStatCard}>
@@ -196,20 +311,17 @@ export default function HomeScreen() {
             <Text style={styles.quickStatLabel}>Notes</Text>
           </View>
           <View style={styles.quickStatCard}>
-            <View style={[styles.quickStatIcon, { backgroundColor: '#FFF3E0' }]}>
-              <Ionicons name="trophy" size={22} color="#FF9800" />
+            <View style={[styles.quickStatIcon, { backgroundColor: '#FCE8EF' }]}>
+              <Ionicons name="wallet-outline" size={22} color="#D48A9F" />
             </View>
-            <Text style={styles.quickStatNumber}>0</Text>
-            <Text style={styles.quickStatLabel}>Goals</Text>
+            <Text style={styles.quickStatNumber}>{dailyExpenseCount}</Text>
+            <Text style={styles.quickStatLabel}>Daily expenses</Text>
           </View>
         </View>
 
         {/* Today's Focus Card */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today's Focus</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>See all</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Today&apos;s Focus</Text>
         </View>
 
         <View style={styles.focusCard}>
@@ -234,7 +346,11 @@ export default function HomeScreen() {
                 <Text style={styles.focusTitle}>Start Your Day</Text>
                 <Text style={styles.focusSubtitle}>Add your first task and begin blooming!</Text>
               </View>
-              <TouchableOpacity style={styles.focusAddBtn}>
+              <TouchableOpacity
+                style={styles.focusAddBtn}
+                onPress={() => router.push('/blossom-routine/tasks' as any)}
+                activeOpacity={0.85}
+              >
                 <Ionicons name="add" size={24} color={StudyBloomColors.primary} />
               </TouchableOpacity>
             </View>
@@ -249,7 +365,7 @@ export default function HomeScreen() {
         <View style={styles.featuresContainer}>
           {/* Row 1 */}
           <View style={styles.featureRow}>
-            <TouchableOpacity style={styles.featureCardLarge}>
+            <TouchableOpacity style={styles.featureCardLarge} onPress={() => router.push('/exams')}>
               <LinearGradient
                 colors={['#FF6B9D', '#FF8A9D']}
                 style={styles.featureLargeGradient}
@@ -266,7 +382,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
 
             <View style={styles.featureColumnSmall}>
-              <TouchableOpacity style={styles.featureCardSmall}>
+              <TouchableOpacity style={styles.featureCardSmall} onPress={() => router.push('/(tabs)/public-community' as any)}>
                 <LinearGradient
                   colors={['#A855F7', '#9333EA']}
                   style={styles.featureSmallGradient}
@@ -275,7 +391,10 @@ export default function HomeScreen() {
                   <Text style={styles.featureSmallTitle}>Community</Text>
                 </LinearGradient>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.featureCardSmall}>
+              <TouchableOpacity
+                style={styles.featureCardSmall}
+                onPress={() => router.push('/help-request' as any)}
+              >
                 <LinearGradient
                   colors={['#34D399', '#10B981']}
                   style={styles.featureSmallGradient}
@@ -290,16 +409,24 @@ export default function HomeScreen() {
           {/* Row 2 */}
           <View style={styles.featureRow}>
             <View style={styles.featureColumnSmall}>
-              <TouchableOpacity style={styles.featureCardSmall}>
+              <TouchableOpacity
+                style={styles.featureCardSmall}
+                onPress={() => router.push('/(tabs)/respond' as any)}
+                activeOpacity={0.85}
+              >
                 <LinearGradient
-                  colors={['#60A5FA', '#3B82F6']}
-                  style={styles.featureSmallGradient}
+                   colors={['#8E2DE2', '#4A00E0']}
+                   style={styles.featureSmallGradient}
                 >
                   <Ionicons name="chatbubbles" size={24} color="#FFF" />
-                  <Text style={styles.featureSmallTitle}>Help Response</Text>
+                  <Text style={styles.featureSmallTitle}>Help Respond</Text>
                 </LinearGradient>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.featureCardSmall}>
+              <TouchableOpacity
+                style={styles.featureCardSmall}
+                onPress={() => router.push('/blossom-routine' as any)}
+                activeOpacity={0.85}
+              >
                 <LinearGradient
                   colors={['#FBBF24', '#F59E0B']}
                   style={styles.featureSmallGradient}
@@ -310,7 +437,10 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.featureCardLarge}>
+            <TouchableOpacity
+              style={styles.featureCardLarge}
+              onPress={() => router.push('/study-space' as any)}
+            >
               <LinearGradient
                 colors={['#FB7185', '#EC4899']}
                 style={styles.featureLargeGradient}
@@ -325,35 +455,6 @@ export default function HomeScreen() {
                 <Text style={styles.featureLargeDesc}>Your cozy corner</Text>
               </LinearGradient>
             </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Mood Check Section */}
-        <View style={styles.moodSection}>
-          <View style={styles.moodCard}>
-            <Text style={styles.moodTitle}>How are you feeling today?</Text>
-            <View style={styles.moodOptions}>
-              <TouchableOpacity style={[styles.moodOption, selectedMood === 'Happy' && styles.moodOptionSelected]} onPress={() => handleMoodSelect('Happy')}>
-                <Text style={styles.moodEmoji}>😊</Text>
-                <Text style={styles.moodLabel}>Happy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.moodOption, selectedMood === 'Calm' && styles.moodOptionSelected]} onPress={() => handleMoodSelect('Calm')}>
-                <Text style={styles.moodEmoji}>😌</Text>
-                <Text style={styles.moodLabel}>Calm</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.moodOption, selectedMood === 'Tired' && styles.moodOptionSelected]} onPress={() => handleMoodSelect('Tired')}>
-                <Text style={styles.moodEmoji}>😴</Text>
-                <Text style={styles.moodLabel}>Tired</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.moodOption, selectedMood === 'Stressed' && styles.moodOptionSelected]} onPress={() => handleMoodSelect('Stressed')}>
-                <Text style={styles.moodEmoji}>😰</Text>
-                <Text style={styles.moodLabel}>Stressed</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.moodOption, selectedMood === 'Loved' && styles.moodOptionSelected]} onPress={() => handleMoodSelect('Loved')}>
-                <Text style={styles.moodEmoji}>🥰</Text>
-                <Text style={styles.moodLabel}>Loved</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
 
@@ -397,7 +498,7 @@ export default function HomeScreen() {
               <Ionicons name="chatbubble-ellipses" size={24} color={StudyBloomColors.tertiary} />
             </View>
             <Text style={styles.quoteText}>
-              "You are capable of amazing things. Keep believing in yourself!"
+              &quot;You are capable of amazing things. Keep believing in yourself!&quot;
             </Text>
             <View style={styles.quoteFooter}>
               <Ionicons name="heart" size={14} color={StudyBloomColors.primary} />
@@ -479,7 +580,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
-  headerLeft: {},
+  headerLeft: { flex: 1 },
   greeting: {
     fontSize: 14,
     color: StudyBloomColors.gray,
@@ -510,12 +611,22 @@ const styles = StyleSheet.create({
   },
   notificationBadge: {
     position: 'absolute',
-    top: 10,
-    right: 12,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: 6,
+    right: 6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: '#FF6B6B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
   profileAvatar: {
     borderRadius: 24,

@@ -5,6 +5,8 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { BlossomTasksProvider } from '@/contexts/BlossomTasksContext';
+import { ExamProvider } from '@/contexts/ExamContext';
 import { StudyBloomColors } from '@/constants/theme';
 
 // Custom light theme with StudyBloom colors
@@ -42,14 +44,23 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? StudyBloomDarkTheme : StudyBloomLightTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <ExamProvider>
+        <BlossomTasksProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? StudyBloomDarkTheme : StudyBloomLightTheme}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="blossom-routine" />
+              <Stack.Screen name="exams" />
+              <Stack.Screen name="help-request" />
+              <Stack.Screen name="public-community" />
+              <Stack.Screen name="study-space" />
+              <Stack.Screen name="notifications" />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </BlossomTasksProvider>
+      </ExamProvider>
     </AuthProvider>
   );
 }

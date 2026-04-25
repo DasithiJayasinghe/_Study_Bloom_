@@ -87,7 +87,7 @@ function FeatureCard({ feature, onPress }: FeatureCardProps) {
   return (
     <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.85}>
       <LinearGradient
-        colors={feature.gradientColors}
+        colors={feature.gradientColors as [string, string]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.featureGradient}
@@ -294,7 +294,7 @@ export default function LandingScreen() {
             {selectedFeature && (
               <>
                 <LinearGradient
-                  colors={selectedFeature.gradientColors}
+                  colors={selectedFeature.gradientColors as [string, string]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.modalHeader}

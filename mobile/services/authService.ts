@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
+import { fetchWithTimeout } from '@/utils/apiFetch';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = getApiBaseUrl();
 
 export interface User {
   id: string;
@@ -45,7 +47,7 @@ const USER_KEY = 'studybloom_user';
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await fetchWithTimeout(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,7 +66,7 @@ export const authService = {
   },
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${API_URL}/auth/register`, {
+    const response = await fetchWithTimeout(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -113,7 +115,7 @@ export const authService = {
       throw new Error('No authentication token');
     }
 
-    const response = await fetch(`${API_URL}/profile`, {
+    const response = await fetchWithTimeout(`${API_URL}/profile`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -137,7 +139,7 @@ export const authService = {
       throw new Error('No authentication token');
     }
 
-    const response = await fetch(`${API_URL}/auth/update-profile`, {
+    const response = await fetchWithTimeout(`${API_URL}/auth/update-profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -165,7 +167,7 @@ export const authService = {
       throw new Error('No authentication token');
     }
 
-    const response = await fetch(`${API_URL}/auth/update-password`, {
+    const response = await fetchWithTimeout(`${API_URL}/auth/update-password`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
