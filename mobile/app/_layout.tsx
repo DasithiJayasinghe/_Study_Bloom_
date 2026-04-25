@@ -46,6 +46,11 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="add-study-gem" options={{ title: 'Add Study Gem' }} />
+          <Stack.Screen name="study-space" options={{ title: 'My Little Study Space' }} />
+          <Stack.Screen name="create-folder" options={{ presentation: 'modal', title: 'Create Folder' }} />
+          <Stack.Screen name="study-gem-details" options={{ title: 'Study Gem Details' }} />
+          <Stack.Screen name="edit-study-gem" options={{ title: 'Edit Study Gem' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />
