@@ -12,9 +12,10 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { studySpaceService, Folder } from '../services/studySpaceService';
 import { useAuth } from '../contexts/AuthContext';
@@ -43,22 +44,35 @@ export default function AddStudyGemScreen() {
     const [isSaving, setIsSaving] = useState(false);
     const [attachments, setAttachments] = useState<any[]>([]);
 
-    useEffect(() => {
-        const fetchFolders = async () => {
-            try {
-                const fetchedFolders = await studySpaceService.getFolders();
-                setFolders(fetchedFolders);
-                if (fetchedFolders.length > 0) {
-                    setSelectedFolder(fetchedFolders[0]);
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchFolders = async () => {
+                try {
+                    const fetchedFolders = await studySpaceService.getFolders();
+                    
+                    setFolders(prevFolders => {
+                        // If a new folder was added (length increased), find and select it
+                        if (prevFolders.length > 0 && fetchedFolders.length > prevFolders.length) {
+                            const newFolder = fetchedFolders.find(f => !prevFolders.some(old => old._id === f._id));
+                            if (newFolder) {
+                                setSelectedFolder(newFolder);
+                            }
+                        } 
+                        // Initial load: select first folder if none selected
+                        else if (prevFolders.length === 0 && fetchedFolders.length > 0) {
+                            setSelectedFolder(fetchedFolders[0]);
+                        }
+                        return fetchedFolders;
+                    });
+                } catch (error) {
+                    console.error('Error fetching folders:', error);
+                } finally {
+                    setIsLoading(false);
                 }
-            } catch (error) {
-                console.error('Error fetching folders:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchFolders();
-    }, []);
+            };
+            fetchFolders();
+        }, [])
+    );
 
     const handlePickDocument = async () => {
         if (attachments.length >= 5) {
@@ -123,9 +137,10 @@ export default function AddStudyGemScreen() {
     };
 
     return (
+        <KeyboardAvoidingView style={{ flex: 1, backgroundColor: SCREEN_BG }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <View style={styles.header}>
+                    <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={ACCENT_PINK} />
                 </TouchableOpacity>
@@ -136,7 +151,15 @@ export default function AddStudyGemScreen() {
                 />
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} scrollEnabled={!showDropdown}>
+            <ScrollView 
+                contentContainerStyle={styles.scrollContent} 
+                showsVerticalScrollIndicator={false} 
+                keyboardShouldPersistTaps="handled"
+                onScroll={() => {
+                    if (showDropdown) setShowDropdown(false);
+                }}
+                scrollEventThrottle={16}
+            >
                 {/* Banner */}
                 <View style={styles.banner}>
                     <View style={styles.bannerIconContainer}>
@@ -305,6 +328,7 @@ export default function AddStudyGemScreen() {
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
+        </KeyboardAvoidingView>
     );
 }
 
