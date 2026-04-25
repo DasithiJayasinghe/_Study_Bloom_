@@ -74,6 +74,13 @@ exports.getAllPosts = async (req, res) => {
         if (sort === "upvoted") {
             sortOption = { upvotes: -1, createdAt: -1 };
         }
+        if (sort === "trending") {
+            // Top upvoted posts from the current calendar month
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            filter.createdAt = { $gte: startOfMonth };
+            sortOption = { upvotes: -1, createdAt: -1 };
+        }
 
         const posts = await Post.find(filter)
             .populate("user", "fullName profilePicture")
