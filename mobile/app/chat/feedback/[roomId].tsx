@@ -232,3 +232,4 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     }
 });
+//chat feedback submit page
