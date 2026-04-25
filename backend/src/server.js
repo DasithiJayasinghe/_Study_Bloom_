@@ -29,6 +29,15 @@ console.log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
 console.log('Auth routes mounted successfully');
 
+// Study Space routes
+const folderRoutes = require('./routes/folderRoutes');
+const studyGemRoutes = require('./routes/studyGemRoutes');
+const sessionRoutes = require('./routes/sessionRoutes');
+
+app.use('/api/folders', folderRoutes);
+app.use('/api/gems', studyGemRoutes);
+app.use('/api/sessions', sessionRoutes);
+
 // Dev route - list all users (remove in production)
 app.get('/api/users', async (req, res) => {
   try {
