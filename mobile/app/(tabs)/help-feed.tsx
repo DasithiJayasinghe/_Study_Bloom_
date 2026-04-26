@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const COLORS = {
   primary: '#D81B60',
-  secondary: '#C95BEA',
+  secondary: '#C95BEA',  //clolor pallete
   tertiary: '#F4C8F6',
   background: '#FFF7FC',
   card: '#FFFEFF',
