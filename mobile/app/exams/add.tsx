@@ -21,7 +21,7 @@ import { StudyBloomColors } from '@/constants/theme';
 import { useExams } from '@/contexts/ExamContext';
 import { ExamFormData, PRIORITY_COLORS, Reminder } from '@/services/examTypes';
 
-type Priority = 'easy' | 'medium' | 'hard';
+type Priority = 'easy' | 'medium' | 'hard'; //add exams
 
 const reminderOptions: { label: string; value: Reminder['type'] }[] = [
   { label: '1 Hour Before', value: '1_hour' },
