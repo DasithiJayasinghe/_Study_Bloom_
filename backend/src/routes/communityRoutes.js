@@ -34,5 +34,3 @@ router.post("/posts/:id/vote", protect, votePost);
 router.post("/posts/:id/poll-vote", protect, votePoll);
 
 module.exports = router;
-
-

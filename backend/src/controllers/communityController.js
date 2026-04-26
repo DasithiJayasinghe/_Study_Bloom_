@@ -2,6 +2,7 @@ const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const Vote = require("../models/Vote");
 const PollVote = require("../models/PollVote");
+const Notification = require("../models/Notification");
 
 // Create a new post
 exports.createPost = async (req, res) => {
@@ -43,7 +44,7 @@ exports.createPost = async (req, res) => {
     }
 };
 
-// Get all posts
+// Get all posts (with search, filter, sort)
 exports.getAllPosts = async (req, res) => {
     try {
         const { search, type, subject, sort } = req.query;
@@ -239,6 +240,33 @@ exports.addComment = async (req, res) => {
 
         const populated = await Comment.findById(comment._id).populate("userId", "fullName profilePicture");
 
+        // Create notification for post owner (if not the same person)
+        if (post.user.toString() !== req.user._id.toString()) {
+            await Notification.create({
+                recipient: post.user,
+                sender: req.user._id,
+                type: 'new_comment',
+                postId: post._id,
+                title: 'New Comment',
+                body: `${req.user.fullName} commented on your post: "${post.title}"`
+            });
+        }
+
+        // Create notification for parent comment owner on replies
+        if (parentComment) {
+            const parent = await Comment.findById(parentComment);
+            if (parent && parent.userId.toString() !== req.user._id.toString()) {
+                await Notification.create({
+                    recipient: parent.userId,
+                    sender: req.user._id,
+                    type: 'new_comment',
+                    postId: post._id,
+                    title: 'New Reply',
+                    body: `${req.user.fullName} replied to your comment: "${parent.content.substring(0, 30)}..."`
+                });
+            }
+        }
+
         res.status(201).json({ success: true, comment: populated });
     } catch (error) {
         console.error("Error adding comment:", error);
@@ -293,7 +321,7 @@ exports.deleteComment = async (req, res) => {
     }
 };
 
-// Vote on a post
+// Vote on a post (upvote / downvote)
 exports.votePost = async (req, res) => {
     try {
         const { type } = req.body; // "upvote" or "downvote"
@@ -311,10 +339,12 @@ exports.votePost = async (req, res) => {
 
         if (existingVote) {
             if (existingVote.type === type) {
+                // Remove vote (toggle off)
                 if (type === "upvote") post.upvotes = Math.max(0, post.upvotes - 1);
                 else post.downvotes = Math.max(0, post.downvotes - 1);
                 await existingVote.deleteOne();
             } else {
+                // Switch vote
                 if (type === "upvote") {
                     post.upvotes += 1;
                     post.downvotes = Math.max(0, post.downvotes - 1);
@@ -326,6 +356,7 @@ exports.votePost = async (req, res) => {
                 await existingVote.save();
             }
         } else {
+            // New vote
             await Vote.create({ postId: post._id, userId: req.user._id, type });
             if (type === "upvote") post.upvotes += 1;
             else post.downvotes += 1;
@@ -366,6 +397,7 @@ exports.votePoll = async (req, res) => {
         const existingVote = await PollVote.findOne({ postId: post._id, userId: req.user._id });
 
         if (existingVote) {
+            // Switch vote
             const oldIndex = existingVote.optionIndex;
             if (post.pollOptions[oldIndex]) {
                 post.pollOptions[oldIndex].voteCount = Math.max(0, post.pollOptions[oldIndex].voteCount - 1);
@@ -374,6 +406,7 @@ exports.votePoll = async (req, res) => {
             existingVote.optionIndex = optionIndex;
             await existingVote.save();
         } else {
+            // New vote
             await PollVote.create({ postId: post._id, userId: req.user._id, optionIndex });
             post.pollOptions[optionIndex].voteCount += 1;
         }
