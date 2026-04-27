@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { StudyBloomColors } from '@/constants/theme';
 
-export default function ExamsLayout() {
+export default function ExamsLayout() { //layout
   return (
     <Stack
       screenOptions={{
