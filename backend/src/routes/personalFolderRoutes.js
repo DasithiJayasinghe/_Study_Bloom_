@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getFolders, getFolder, createFolder, deleteFolder, updateFolder } = require('../controllers/folderController');
+const { getFolders, getFolder, createFolder, deleteFolder, updateFolder } = require('../controllers/personalFolderController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.route('/')
