@@ -1,5 +1,52 @@
 const HelpRequest = require("../models/HelpRequest");
 const Folder = require("../models/Folder");
+const Concern = require("../models/Concern");
+const ChatRoom = require("../models/ChatRoom");
+
+const ensureChatResourcesForRequest = async (requestDoc) => {
+  if (!requestDoc) return { concern: null, room: null };
+  if (!requestDoc.acceptedBy || !["accepted", "resolved"].includes(requestDoc.status)) {
+    return { concern: null, room: null };
+  }
+
+  let concern = null;
+  if (requestDoc.concernRef) {
+    concern = await Concern.findById(requestDoc.concernRef);
+  }
+
+  if (!concern) {
+    concern = await Concern.create({
+      requester: requestDoc.user,
+      title: requestDoc.questionTitle,
+      description: requestDoc.questionDetails,
+      category: requestDoc.subject || "general",
+      acceptedBy: requestDoc.acceptedBy,
+      status: requestDoc.status === "resolved" ? "complete" : "accepted",
+      acceptedAt: requestDoc.updatedAt || new Date(),
+      completedAt: requestDoc.status === "resolved" ? (requestDoc.updatedAt || new Date()) : null,
+    });
+    requestDoc.concernRef = concern._id;
+  }
+
+  let room = null;
+  if (requestDoc.chatRoom) {
+    room = await ChatRoom.findById(requestDoc.chatRoom);
+  }
+
+  if (!room) {
+    room = await ChatRoom.create({
+      concern: concern._id,
+      requester: requestDoc.user,
+      responder: requestDoc.acceptedBy,
+      status: requestDoc.status === "resolved" ? "complete" : "pending",
+      closedBy: requestDoc.status === "resolved" ? requestDoc.acceptedBy : null,
+    });
+    requestDoc.chatRoom = room._id;
+  }
+
+  await requestDoc.save();
+  return { concern, room };
+};
 
 // @desc    Create help request
 // @route   POST /api/help-requests
@@ -110,7 +157,15 @@ const getHelpRequestById = async (req, res) => {
       return res.status(404).json({ message: "Help request not found" });
     }
 
-    res.status(200).json(request);
+    await ensureChatResourcesForRequest(request);
+
+    const refreshedRequest = await HelpRequest.findById(request._id)
+      .populate("user", "fullName email profilePicture")
+      .populate("folder", "name")
+      .populate("acceptedBy", "fullName email profilePicture")
+      .populate("chatRoom");
+
+    res.status(200).json(refreshedRequest);
   } catch (error) {
     res.status(500).json({
       message: "Failed to fetch help request",
@@ -178,16 +233,52 @@ const acceptHelpRequest = async (req, res) => {
 
     request.acceptedBy = req.user._id;
     request.status = "accepted";
+
+    let concern = null;
+    if (request.concernRef) {
+      concern = await Concern.findById(request.concernRef);
+    }
+
+    if (!concern) {
+      concern = await Concern.create({
+        requester: request.user,
+        title: request.questionTitle,
+        description: request.questionDetails,
+        category: request.subject || "general",
+        acceptedBy: req.user._id,
+        status: "accepted",
+        acceptedAt: new Date(),
+      });
+      request.concernRef = concern._id;
+    }
+
+    let room = null;
+    if (request.chatRoom) {
+      room = await ChatRoom.findById(request.chatRoom);
+    }
+
+    if (!room) {
+      room = await ChatRoom.create({
+        concern: concern._id,
+        requester: request.user,
+        responder: req.user._id,
+        status: "pending",
+      });
+      request.chatRoom = room._id;
+    }
+
     await request.save();
 
     const updatedRequest = await HelpRequest.findById(request._id)
       .populate("user", "fullName email profilePicture")
       .populate("folder", "name")
-      .populate("acceptedBy", "fullName email profilePicture");
+      .populate("acceptedBy", "fullName email profilePicture")
+      .populate("chatRoom");
 
     res.status(200).json({
       message: "Help request accepted successfully",
       request: updatedRequest,
+      room,
     });
   } catch (error) {
     res.status(500).json({
@@ -218,14 +309,14 @@ const updateHelpRequestStatus = async (req, res) => {
     const request = await HelpRequest.findById(req.params.id);
 
     if (!request || request.status === "deleted") {
-      return res.status(404).json({ message: "Help request not found." });
+      return res.status(404).json({ message: "Help request not found" });
     }
 
-    // Only request owner can mark as resolved.
+    // Only request owner can mark as resolved
     if (request.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         message: "Not authorized to update this help request status",
-      }); 
+      });
     }
 
     // Request should be accepted before resolving

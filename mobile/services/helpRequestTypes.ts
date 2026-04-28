@@ -23,6 +23,7 @@ export interface HelpRequest {
   isUrgent: boolean;
   status: HelpRequestStatus;
   acceptedBy: RequestUser | null;
+  chatRoom?: string | any;
   createdAt: string;
   updatedAt: string;
 }

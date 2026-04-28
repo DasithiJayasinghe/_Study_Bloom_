@@ -9,6 +9,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -97,7 +98,7 @@ function FeedCard({
 
           {item.isUrgent ? (
             <View style={styles.urgentBadge}>
-              <Ionicons name="alert-circle" size={12} color={COLORS.urgentText}/>
+              <Ionicons name="alert-circle" size={12} color={COLORS.urgentText} />
               <Text style={styles.urgentText}>URGENT</Text>
             </View>
           ) : (
@@ -181,9 +182,13 @@ export default function HelpFeedScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <View style={styles.headerCircle}>
+          <TouchableOpacity 
+            style={styles.headerCircle}
+            onPress={() => router.push('/(tabs)/messages' as any)}
+            activeOpacity={0.7}
+          >
             <Ionicons name="people" size={18} color={COLORS.primary} />
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>HELP FEED</Text>
@@ -313,7 +318,6 @@ const styles = StyleSheet.create({
     marginBottom: 26,
     position: 'relative',
   },
-
   cardWrapPressed: {
     transform: [{ scale: 0.985 }],
     opacity: 0.96,
@@ -332,7 +336,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     elevation: 2,
   },
-  
   cloudBackMain: {
     borderTopLeftRadius: 90,
     borderTopRightRadius: 120,
