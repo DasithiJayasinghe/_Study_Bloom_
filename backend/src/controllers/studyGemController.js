@@ -12,7 +12,7 @@ exports.getStudyGems = async (req, res) => {
             query.folder = req.query.folderId;
         }
 
-        const gems = await StudyGem.find(query).populate('folder', 'name icon color');
+        const gems = await StudyGem.find(query).populate({ path: 'folder', select: 'name icon color', model: 'PersonalFolder' });
 
         res.status(200).json({
             success: true,
@@ -32,7 +32,7 @@ exports.getStudyGems = async (req, res) => {
 // @access Private
 exports.getStudyGem = async (req, res) => {
     try {
-        const gem = await StudyGem.findById(req.params.id).populate('folder', 'name icon color');
+        const gem = await StudyGem.findById(req.params.id).populate({ path: 'folder', select: 'name icon color', model: 'PersonalFolder' });
 
         if (!gem) {
             return res.status(404).json({
@@ -66,7 +66,7 @@ exports.getStudyGem = async (req, res) => {
 // @access Private
 exports.createStudyGem = async (req, res) => {
     try {
-        const { title, description, notes, folderId, type, tags, attachments } = req.body;
+        const { title, description, notes, folderId, type, tags, attachments, pollData } = req.body;
 
         if (!title || !folderId) {
             return res.status(400).json({
@@ -83,7 +83,8 @@ exports.createStudyGem = async (req, res) => {
             user: req.user._id,
             type,
             tags,
-            attachments
+            attachments,
+            pollData
         });
 
         res.status(201).json({
