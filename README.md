@@ -6,7 +6,14 @@
  ## Backend Intergration
 
 ###Problem Overview 
+--
+The Study Bloom Help Response System addresses this issue by introducing a centralized platform where users can post concerns through a shared help feed. Unlike traditional systems, any available responder (without requiring a direct request) can proactively accept a concern and provide assistance.
 
+Once a concern is accepted, a private chat channel is established between the requester and the responder. This chat enables real-time communication and supports multiple interaction formats, including text, image uploads, PDF sharing, and voice messages. To manage the lifecycle of each interaction, responders can update the chat status (e.g., active or resolved). When marked appropriately, the chat becomes read-only, preventing further modifications and preserving the conversation for reference.
+
+Additionally, the system ensures accountability and quality of responses through a feedback mechanism. After a chat is closed, the requester is prompted to submit feedback, which is then stored in the responder’s profile. This helps evaluate responder performance and improve the overall reliability of the platform.
+
+Each user maintains separate request and response chat lists, ensuring clear organization and easy access to ongoing and completed interactions within the mobile application.
 ----
 
 ###  Folder Structure
