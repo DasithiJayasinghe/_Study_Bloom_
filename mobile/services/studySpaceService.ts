@@ -26,6 +26,10 @@ export interface StudyGem {
     type: 'community' | 'manual';
     tags: string[];
     attachments: Attachment[];
+    pollData?: {
+        optionText: string;
+        voteCount: number;
+    }[];
     createdAt: string;
 }
 
@@ -37,6 +41,10 @@ export interface CreateGemData {
     type: 'community' | 'manual';
     tags?: string[];
     attachments?: Attachment[];
+    pollData?: {
+        optionText: string;
+        voteCount: number;
+    }[];
 }
 
 export const studySpaceService = {
@@ -54,7 +62,7 @@ export const studySpaceService = {
 
     // Folder APIs
     async getFolders(): Promise<Folder[]> {
-        const response = await fetch(`${API_URL}/folders`, {
+        const response = await fetch(`${API_URL}/personal-folders`, {
             method: 'GET',
             headers: await this.getAuthHeaders(),
         });
@@ -65,7 +73,7 @@ export const studySpaceService = {
     },
 
     async getFolder(id: string): Promise<Folder> {
-        const response = await fetch(`${API_URL}/folders/${id}`, {
+        const response = await fetch(`${API_URL}/personal-folders/${id}`, {
             method: 'GET',
             headers: await this.getAuthHeaders(),
         });
@@ -76,7 +84,7 @@ export const studySpaceService = {
     },
 
     async createFolder(folderData: { name: string; icon: string; color: string }): Promise<Folder> {
-        const response = await fetch(`${API_URL}/folders`, {
+        const response = await fetch(`${API_URL}/personal-folders`, {
             method: 'POST',
             headers: await this.getAuthHeaders(),
             body: JSON.stringify(folderData),
@@ -88,7 +96,7 @@ export const studySpaceService = {
     },
 
     async updateFolder(id: string, folderData: { name?: string; icon?: string; color?: string }): Promise<Folder> {
-        const response = await fetch(`${API_URL}/folders/${id}`, {
+        const response = await fetch(`${API_URL}/personal-folders/${id}`, {
             method: 'PUT',
             headers: await this.getAuthHeaders(),
             body: JSON.stringify(folderData),
@@ -100,7 +108,7 @@ export const studySpaceService = {
     },
 
     async deleteFolder(id: string): Promise<void> {
-        const response = await fetch(`${API_URL}/folders/${id}`, {
+        const response = await fetch(`${API_URL}/personal-folders/${id}`, {
             method: 'DELETE',
             headers: await this.getAuthHeaders(),
         });
