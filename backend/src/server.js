@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const examRoutes = require('./routes/examRoutes');
 const { protect } = require('./middleware/authMiddleware');
 
 // Load backend/.env explicitly so this works from workspace root.
@@ -15,6 +16,10 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -28,6 +33,11 @@ app.get('/api/health', (req, res) => {
 console.log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
 console.log('Auth routes mounted successfully');
+
+// Exam routes
+console.log('Mounting exam routes at /api/exams');
+app.use('/api/exams', examRoutes);
+console.log('Exam routes mounted successfully');
 
 // Dev route - list all users (remove in production)
 app.get('/api/users', async (req, res) => {
@@ -56,6 +66,25 @@ app.get('/api/profile', protect, (req, res) => {
       createdAt: req.user.createdAt
     }
   });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ success: false, message: 'File too large. Maximum size is 10MB.' });
+    }
+    return res.status(400).json({ success: false, message: err.message });
+  }
+  
+  res.status(500).json({ success: false, message: 'Internal server error' });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 const startServer = async () => {
