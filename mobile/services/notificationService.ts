@@ -2,9 +2,6 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Exam, Reminder } from './examTypes';
-import { authService } from './authService';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000/api';
 
 const NOTIFICATION_IDS_KEY = 'exam_notification_ids';
 const NOTIFICATIONS_LIST_KEY = 'studybloom_notifications_list';
@@ -15,9 +12,8 @@ export interface AppNotification {
   title: string;
   body: string;
   examId?: string;
-  postId?: string;
   examSubject?: string;
-  type: 'reminder' | 'exam_today' | 'exam_tomorrow' | 'general' | 'help_request_accepted' | 'new_comment';
+  type: 'reminder' | 'exam_today' | 'exam_tomorrow' | 'general' | 'help_request_accepted';
   helpRequestId?: string;
   read: boolean;
   createdAt: string;
@@ -100,7 +96,7 @@ export const notificationService = {
 
       // Store notification ID for later cancellation
       await this.storeNotificationId(exam._id, notificationId);
-
+      
       // Add to notifications list for display
       await this.addToNotificationsList({
         id: notificationId,
@@ -281,10 +277,10 @@ export const notificationService = {
     try {
       const data = await AsyncStorage.getItem(NOTIFICATIONS_LIST_KEY);
       if (!data) return [];
-
+      
       const notifications: AppNotification[] = JSON.parse(data);
       // Sort by createdAt descending (newest first)
-      return notifications.sort((a, b) =>
+      return notifications.sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     } catch (error) {
@@ -320,13 +316,10 @@ export const notificationService = {
   async markAsRead(notificationId: string): Promise<void> {
     try {
       const notifications = await this.getNotificationsList();
-      const updated = notifications.map(n =>
+      const updated = notifications.map(n => 
         n.id === notificationId ? { ...n, read: true } : n
       );
       await AsyncStorage.setItem(NOTIFICATIONS_LIST_KEY, JSON.stringify(updated));
-
-      // Sync with backend
-      await this.markAsReadBackend(notificationId);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
@@ -338,17 +331,6 @@ export const notificationService = {
       const notifications = await this.getNotificationsList();
       const updated = notifications.map(n => ({ ...n, read: true }));
       await AsyncStorage.setItem(NOTIFICATIONS_LIST_KEY, JSON.stringify(updated));
-
-      // Sync with backend
-      try {
-        const token = await authService.getToken();
-        await fetch(`${API_URL}/notifications/mark-all-read`, {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } catch (error) {
-        console.error('Failed to mark all read on backend:', error);
-      }
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
     }
@@ -360,17 +342,6 @@ export const notificationService = {
       const notifications = await this.getNotificationsList();
       const filtered = notifications.filter(n => n.id !== notificationId);
       await AsyncStorage.setItem(NOTIFICATIONS_LIST_KEY, JSON.stringify(filtered));
-
-      // Sync with backend
-      try {
-        const token = await authService.getToken();
-        await fetch(`${API_URL}/notifications/${notificationId}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } catch (error) {
-        console.error('Failed to delete on backend:', error);
-      }
     } catch (error) {
       console.error('Failed to delete notification:', error);
     }
@@ -380,118 +351,21 @@ export const notificationService = {
   async clearNotificationsList(): Promise<void> {
     try {
       await AsyncStorage.removeItem(NOTIFICATIONS_LIST_KEY);
-
-      // Sync with backend
-      try {
-        const token = await authService.getToken();
-        await fetch(`${API_URL}/notifications/clear-all`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } catch (error) {
-        console.error('Failed to clear all on backend:', error);
-      }
     } catch (error) {
       console.error('Failed to clear notifications list:', error);
-    }
-  },
-
-  async clearLocalNotifications(): Promise<void> {
-    try {
-      await AsyncStorage.removeItem(NOTIFICATIONS_LIST_KEY);
-    } catch (error) {
-      console.error('Failed to clear local notifications:', error);
-    }
-  },
-
-  // Sync notifications with backend
-  async fetchNotificationsFromBackend(): Promise<void> {
-    try {
-      const token = await authService.getToken();
-      if (!token) return;
-
-      const response = await fetch(`${API_URL}/notifications`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (response.ok && data.success) {
-        const localNotifications = await this.getNotificationsList();
-        const backendNotifIds = data.notifications.map((n: any) => n._id);
-
-        // 1. Remove local copies of backend notifications that were deleted on server
-        const updatedLocal = localNotifications.filter(localN => {
-          const isBackendId = /^[0-9a-fA-F]{24}$/.test(localN.id);
-          if (isBackendId && !backendNotifIds.includes(localN.id)) {
-            return false;
-          }
-          return true;
-        });
-
-        // 2. Add or Update from backend
-        let finalNotifications = [...updatedLocal];
-        for (const notif of data.notifications) {
-          const index = finalNotifications.findIndex(n => n.id === notif._id);
-
-          if (index !== -1) {
-            finalNotifications[index] = {
-              ...finalNotifications[index],
-              read: notif.read,
-              title: notif.title,
-              body: notif.body
-            };
-          } else {
-            finalNotifications.unshift({
-              id: notif._id,
-              title: notif.title,
-              body: notif.body,
-              type: notif.type,
-              postId: notif.postId,
-              helpRequestId: notif.helpRequestId,
-              examId: notif.examId,
-              read: notif.read,
-              createdAt: notif.createdAt,
-            } as any);
-          }
-        }
-
-        const trimmed = finalNotifications.sort((a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ).slice(0, 50);
-
-        await AsyncStorage.setItem(NOTIFICATIONS_LIST_KEY, JSON.stringify(trimmed));
-      }
-    } catch (error) {
-      console.error('Failed to fetch notifications from backend:', error);
-    }
-  },
-
-  async markAsReadBackend(notificationId: string): Promise<void> {
-    try {
-      const token = await authService.getToken();
-      await fetch(`${API_URL}/notifications/${notificationId}/read`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-    } catch (error) {
-      console.error('Failed to mark read on backend:', error);
     }
   },
 
   // Check for upcoming exams and add notifications
   async checkUpcomingExams(exams: Exam[]): Promise<void> {
     const now = new Date();
-
+    
     for (const exam of exams) {
       if (!exam.date || !exam.time) continue;
-
+      
       const examDate = new Date(exam.date);
       const [hours, minutes] = exam.time.split(':').map(Number);
-
+      
       const examDateTime = new Date(
         examDate.getUTCFullYear(),
         examDate.getUTCMonth(),
@@ -499,16 +373,16 @@ export const notificationService = {
         hours,
         minutes
       );
-
+      
       const hoursUntilExam = (examDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-
+      
       // If exam is today (within 24 hours)
       if (hoursUntilExam > 0 && hoursUntilExam <= 24) {
         const notifications = await this.getNotificationsList();
         const alreadyNotified = notifications.some(
           n => n.examId === exam._id && n.type === 'exam_today'
         );
-
+        
         if (!alreadyNotified) {
           await this.addToNotificationsList({
             id: `exam_today_${exam._id}_${Date.now()}`,
@@ -522,14 +396,14 @@ export const notificationService = {
           });
         }
       }
-
+      
       // If exam is tomorrow (24-48 hours)
       if (hoursUntilExam > 24 && hoursUntilExam <= 48) {
         const notifications = await this.getNotificationsList();
         const alreadyNotified = notifications.some(
           n => n.examId === exam._id && n.type === 'exam_tomorrow'
         );
-
+        
         if (!alreadyNotified) {
           await this.addToNotificationsList({
             id: `exam_tomorrow_${exam._id}_${Date.now()}`,

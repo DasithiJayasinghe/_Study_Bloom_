@@ -5,19 +5,11 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const examRoutes = require('./routes/examRoutes');
-const folderRoutes = require("./routes/folderRoutes");
-const helpRequestRoutes = require("./routes/helpRequestRoutes");
-const communityRoutes = require("./routes/communityRoutes");
-const blossomRoutes = require('./routes/blossomRoutes');
-const chatRoutes = require('./routes/chatRoutes');
-const concernRoutes = require('./routes/concernRoutes');
-const feedbackRoutes = require('./routes/feedbackRoutes');
-const notificationRoutes = require('./routes/notificationRoutes');
 const { protect } = require('./middleware/authMiddleware');
 const http = require('http');
 const { initSocket } = require('./config/socket');
 
-// Load backend/.env explicitly so this works from workspace root.
+// Load backend/.env explicitly so this works from workspace root
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 const app = express();
@@ -44,53 +36,10 @@ console.log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
 console.log('Auth routes mounted successfully');
 
-// User routes
-const { getUserById } = require('./controllers/authController');
-app.get('/api/users/:id', protect, getUserById);
-
 // Exam routes
 console.log('Mounting exam routes at /api/exams');
 app.use('/api/exams', examRoutes);
 console.log('Exam routes mounted successfully');
-
-// Folder routes
-console.log('Mounting folder routes at /api/folders');
-app.use('/api/folders', folderRoutes);
-console.log('Folder routes mounted successfully');
-
-// Help request routes
-console.log("Mounting help request routes at /api/help-requests");
-app.use("/api/help-requests", helpRequestRoutes);
-console.log("Help request routes mounted successfully");
-
-// Community routes
-console.log("Mounting community routes at /api/community");
-app.use("/api/community", communityRoutes);
-console.log("Community routes mounted successfully");
-
-// Blossom Routine routes
-console.log('Mounting blossom routes at /api/blossom');
-app.use('/api/blossom', blossomRoutes);
-console.log('Blossom routes mounted successfully');
-
-// Chat & Concern & Feedback routes
-console.log('Mounting chat routes at /api/chat');
-app.use('/api/chat', chatRoutes);
-console.log('Mounting concern routes at /api/concerns');
-app.use('/api/concerns', concernRoutes);
-console.log('Mounting feedback routes at /api/feedback');
-app.use('/api/feedback', feedbackRoutes);
-console.log('Mounting notification routes at /api/notifications');
-app.use('/api/notifications', notificationRoutes);
-
-// Study Space routes
-const personalFolderRoutes = require('./routes/personalFolderRoutes');
-const studyGemRoutes = require('./routes/studyGemRoutes');
-const sessionRoutes = require('./routes/sessionRoutes');
-
-app.use('/api/personal-folders', personalFolderRoutes);
-app.use('/api/gems', studyGemRoutes);
-app.use('/api/sessions', sessionRoutes);
 
 // Dev route - list all users (remove in production)
 app.get('/api/users', async (req, res) => {
@@ -124,14 +73,14 @@ app.get('/api/profile', protect, (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-
+  
   if (err.name === 'MulterError') {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ success: false, message: 'File too large. Maximum size is 10MB.' });
     }
     return res.status(400).json({ success: false, message: err.message });
   }
-
+  
   res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
@@ -152,6 +101,7 @@ const startServer = async () => {
     console.log(`Local: http://localhost:${PORT}`);
     console.log(`Network: http://0.0.0.0:${PORT} (use your computer's IP)`);
   });
-};
+};  
 
 startServer();
+ 

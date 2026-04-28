@@ -75,6 +75,10 @@ export default function NotificationsScreen() {
     if (notification.examId) {
       router.push(`/exams/${notification.examId}`);
     }
+    if (notification.helpRequestId) {
+      router.push(`/help-request/${notification.helpRequestId}`as any);
+      return;
+    }
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
@@ -106,6 +110,8 @@ export default function NotificationsScreen() {
         return 'calendar';
       case 'reminder':
         return 'alarm';
+      case 'help_request_accepted':
+        return 'chatbubble-ellipses';
       default:
         return 'notifications';
     }
@@ -119,6 +125,8 @@ export default function NotificationsScreen() {
         return StudyBloomColors.warning;
       case 'reminder':
         return StudyBloomColors.primary;
+      case 'help_request_accepted':
+        return StudyBloomColors.secondary;
       default:
         return StudyBloomColors.secondary;
     }
@@ -217,6 +225,7 @@ export default function NotificationsScreen() {
             <Text style={styles.emptyTitle}>No notifications yet</Text>
             <Text style={styles.emptySubtitle}>
               When you schedule exam reminders, they'll appear here
+              And, Help Request updates will also show up here.
             </Text>
           </View>
         }
