@@ -29,7 +29,7 @@ export default function ProfileScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);  //
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
