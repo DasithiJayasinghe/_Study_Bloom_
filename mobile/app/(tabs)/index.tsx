@@ -145,7 +145,7 @@ export default function HomeScreen() {
             <View style={styles.bannerContent}>
               <View style={styles.bannerTextSection}>
                 <Text style={styles.bannerTitle}>Keep Blooming!</Text>
-                <Text style={styles.bannerSubtitle}>You're doing amazing sweetie</Text>
+                <Text style={styles.bannerSubtitle}>You're doing amazing sweetie </Text>
                 <View style={styles.streakBadge}>
                   <Ionicons name="flame" size={16} color="#FF6B6B" />
                   <Text style={styles.streakText}>0 day streak</Text>
