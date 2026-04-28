@@ -1,60 +1,9 @@
-# _Study_Bloom-Help Response_
+# _Study_Bloom_
+## Public Community Module
+The Public Community Module in the StudyBloom mobile app, is designed to help students connect, collaborate, and share academic knowledge in a centralized space. It allows users to create, view, update, and delete posts across multiple types such as discussions, questions, study materials, and polls, enabling interaction across a wide range of subjects.
 
-# **Component Overview** 
+Students can attach and preview files like images and PDFs within their posts, making it easy to share lecture notes, past papers, and other resources. These attachments can be viewed or downloaded directly within the app. Poll-type posts allow users to create voting options, while others can participate and share their opinions.
 
+The module also features a threaded comment system with nested replies, encouraging meaningful discussions and peer engagement. A Trending tab highlights the most upvoted posts, while the upvote/downvote system helps surface valuable content. The My Posts section lets students track their own activity, and users can hide posts they are not interested in to keep their feed personalized.
 
- ## Backend Intergration
-
-###Problem Overview
-The Study Bloom Help Response System addresses this issue by introducing a centralized platform where users can post concerns through a shared help feed. Unlike traditional systems, any available responder (without requiring a direct request) can proactively accept a concern and provide assistance.
-
-Once a concern is accepted, a private chat channel is established between the requester and the responder. This chat enables real-time communication and supports multiple interaction formats, including text, image uploads, PDF sharing, and voice messages. To manage the lifecycle of each interaction, responders can update the chat status (e.g., active or resolved). When marked appropriately, the chat becomes read-only, preventing further modifications and preserving the conversation for reference.
-
-Additionally, the system ensures accountability and quality of responses through a feedback mechanism. After a chat is closed, the requester is prompted to submit feedback, which is then stored in the responder’s profile. This helps evaluate responder performance and improve the overall reliability of the platform.
-
-----
-
-###  Folder Structure
-
-
-- **config/**  
-  Contains configuration files required for the application.
-    - `db.js` – Establishes connection with the MongoDB database
-    - `multer.js` – Handles file uploads (images, audio, PDFs, CSV files)
-    - `socket.js` – Sets up real-time communication using Socket.IO
-
-- **controllers/**  
-  Contains the core business logic of the application.
-    - `authController.js` – Handles user authentication (login/register)
-    - `chatController.js` – Manages chat functionality (messages, media sharing)
-    - `concernController.js` – Handles student concerns (create, accept, manage)
-    - `feedbackController.js` – Processes feedback after chat completion
-
-- **middleware/**  
-  Includes custom middleware functions used in request processing.
-    - `authMiddleware.js` – Secures routes using JWT authentication
-    - `uploadMiddleware.js` – Handles file upload requests
-
-- **models/**  
-  Defines MongoDB schemas using Mongoose.
-    - `User.js` – Stores user details
-    - `Concern.js` – Stores help requests
-    - `ChatRoom.js` – Manages chat sessions
-    - `Message.js` – Stores chat messages (text, files, audio)
-    - `Feedback.js` – Stores feedback given to responders
-
-- **routes/**  
-  Defines API endpoints and links them to controllers.
-    - `authRoutes.js` – Authentication routes
-    - `chatRoutes.js` – Chat-related APIs
-    - `concernRoutes.js` – Concern management APIs
-    - `feedbackRoutes.js` – Feedback APIs
-
-- **server.js**  
-  The main entry point of the backend. It initializes the Express server, connects to the database, configures middleware, and registers all routes.
-
----
-
-
-
-## Frontend Intergration
+Additionally, students can search posts and subjects, making it easy to quickly find relevant content. The post creation flow includes selecting post types, adding subjects, attaching files, and previewing content before publishing.

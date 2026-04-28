@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, User, LoginCredentials, RegisterCredentials, UpdateProfileData, UpdatePasswordData } from '@/services/authService';
+import { notificationService } from '@/services/notificationService';
 
 const PROFILE_IMAGE_KEY = 'profile_image';
 
@@ -81,6 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     await authService.logout();
+    await notificationService.clearLocalNotifications();
     setUser(null);
     setProfileImageState(null);
   };
