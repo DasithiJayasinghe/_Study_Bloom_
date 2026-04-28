@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const StudySession = require('../models/StudySession');
 
 // @desc Save a completed study session
@@ -32,7 +33,7 @@ exports.createSession = async (req, res) => {
 // @access Private
 exports.getStats = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = new mongoose.Types.ObjectId(req.user._id);
 
         // Total seconds today
         const today = new Date();
@@ -42,7 +43,7 @@ exports.getStats = async (req, res) => {
             {
                 $match: {
                     user: userId,
-                    createdAt: { $gte: today }
+                    startTime: { $gte: today }
                 }
             },
             {
@@ -133,7 +134,7 @@ const getMonthlyAggregation = async (userId) => {
 // @access Private
 exports.getDailyStatsForMonth = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = new mongoose.Types.ObjectId(req.user._id);
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const month = parseInt(req.query.month) || (new Date().getMonth() + 1);
 
@@ -184,7 +185,7 @@ exports.getDailyStatsForMonth = async (req, res) => {
 // @access Private
 exports.getWeeklyStats = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = new mongoose.Types.ObjectId(req.user._id);
         
         // Start of current week (Monday)
         const now = new Date();
@@ -276,7 +277,7 @@ exports.getWeeklyStats = async (req, res) => {
 // @access Private
 exports.getMonthlyStats = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = new mongoose.Types.ObjectId(req.user._id);
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
