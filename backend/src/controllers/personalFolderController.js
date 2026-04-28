@@ -1,4 +1,4 @@
-const Folder = require('../models/Folder');
+const Folder = require('../models/PersonalFolder');
 const StudyGem = require('../models/StudyGem');
 
 // @desc Get all folders for currently logged-in user
