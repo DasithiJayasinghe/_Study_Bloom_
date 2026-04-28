@@ -15,7 +15,7 @@ Additionally, the system ensures accountability and quality of responses through
 ----
 
 ###  Folder Structure
-![img_1.png](img_1.png)
+
 
 - **config/**  
   Contains configuration files required for the application.
