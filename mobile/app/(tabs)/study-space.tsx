@@ -16,7 +16,7 @@ import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { studySpaceService, Folder, StudyGem } from '../../services/studySpaceService';
 import { useAuth } from '../../contexts/AuthContext';
-import { ButterflyOverlay } from '../../components/ButterflyOverlay';
+import { ButterflyOverlay } from '../../components/studySpace/ButterflyOverlay';
 
 // Palette for "The Ethereal Archivist"
 const SCREEN_BG = '#FEF7FA';
@@ -184,7 +184,7 @@ export default function StudySpaceScreen() {
                 {
                     text: 'Edit Folder',
                     onPress: () => router.push({
-                        pathname: '/edit-folder',
+                        pathname: '/study-space/edit-folder',
                         params: { id: folder._id }
                     })
                 },
@@ -299,19 +299,10 @@ export default function StudySpaceScreen() {
                 {/* Study Journey Button */}
                 <TouchableOpacity
                     style={styles.journeyBtn}
-                    onPress={() => router.push('/study-journey')}
+                    onPress={() => router.push('/study-space/study-journey')}
                 >
                     <MaterialIcons name="auto-awesome" size={18} color="white" />
                     <Text style={styles.journeyBtnText}>View My Study Journey 🌸</Text>
-                </TouchableOpacity>
-
-                {/* TEMPORARY TEST BUTTON FOR COMMUNITY SAVE UI */}
-                <TouchableOpacity
-                    style={{ backgroundColor: '#F48FB1', padding: 15, borderRadius: 20, alignItems: 'center', marginBottom: 20, flexDirection: 'row', justifyContent: 'center' }}
-                    onPress={() => router.push('/save-to-my-space')}
-                >
-                    <Ionicons name="chatbubbles" size={18} color="white" style={{ marginRight: 8 }} />
-                    <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 14 }}>TEST SAVE COMMUNITY UI 💬</Text>
                 </TouchableOpacity>
 
                 {/* Folder Chips */}
@@ -352,7 +343,7 @@ export default function StudySpaceScreen() {
                     ))}
                     <TouchableOpacity
                         style={styles.addFolderButton}
-                        onPress={() => router.push('/create-folder')}
+                        onPress={() => router.push('/study-space/create-folder')}
                     >
                         <Text style={styles.addFolderText}>+ Add </Text>
                     </TouchableOpacity>
@@ -388,7 +379,7 @@ export default function StudySpaceScreen() {
                         {!searchQuery && (
                             <TouchableOpacity
                                 style={styles.addGemButton}
-                                onPress={() => router.push('/add-study-gem')}
+                                onPress={() => router.push('/study-space/add-study-gem')}
                             >
                                 <View style={styles.addGemIcon}>
                                     <Ionicons name="add" size={24} color="white" />
@@ -404,7 +395,7 @@ export default function StudySpaceScreen() {
                                 key={gem._id}
                                 style={styles.gemCard}
                                 onPress={() => router.push({
-                                    pathname: '/study-gem-details',
+                                    pathname: '/study-space/study-gem-details',
                                     params: { id: gem._id }
                                 })}
                             >
@@ -457,7 +448,7 @@ export default function StudySpaceScreen() {
 
             <TouchableOpacity
                 style={styles.fab}
-                onPress={() => router.push('/add-study-gem')}
+                onPress={() => router.push('/study-space/add-study-gem')}
             >
                 <Ionicons name="add" size={32} color="white" />
             </TouchableOpacity>
