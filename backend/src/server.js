@@ -7,7 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const examRoutes = require('./routes/examRoutes');
 const { protect } = require('./middleware/authMiddleware');
 
-// Load backend/.env explicitly so this works from workspace root.
+// Load backend/.env explicitly so this works from workspace root
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 const app = express();
@@ -96,6 +96,7 @@ const startServer = async () => {
     console.log(`Local: http://localhost:${PORT}`);
     console.log(`Network: http://0.0.0.0:${PORT} (use your computer's IP)`);
   });
-};
+};  
 
 startServer();
+ 

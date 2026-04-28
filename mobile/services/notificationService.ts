@@ -5,6 +5,7 @@ import { Exam, Reminder } from './examTypes';
 
 const NOTIFICATION_IDS_KEY = 'exam_notification_ids';
 const NOTIFICATIONS_LIST_KEY = 'studybloom_notifications_list';
+const HELP_REQUEST_NOTIFIED_KEY = 'help_request_notified_ids';
 
 export interface AppNotification {
   id: string;
@@ -12,7 +13,8 @@ export interface AppNotification {
   body: string;
   examId?: string;
   examSubject?: string;
-  type: 'reminder' | 'exam_today' | 'exam_tomorrow' | 'general';
+  type: 'reminder' | 'exam_today' | 'exam_tomorrow' | 'general' | 'help_request_accepted';
+  helpRequestId?: string;
   read: boolean;
   createdAt: string;
   scheduledFor?: string;
@@ -195,6 +197,61 @@ export const notificationService = {
   async cancelAllNotifications(): Promise<void> {
     await Notifications.cancelAllScheduledNotificationsAsync();
     await AsyncStorage.removeItem(NOTIFICATION_IDS_KEY);
+  },
+
+  async getNotifiedHelpRequestIds(): Promise<string[]> {
+    try {
+      const data = await AsyncStorage.getItem(HELP_REQUEST_NOTIFIED_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  async storeNotifiedHelpRequestId(requestId: string): Promise<void> {
+    try {
+      const existing = await this.getNotifiedHelpRequestIds();
+      if (!existing.includes(requestId)) {
+        existing.push(requestId);
+        await AsyncStorage.setItem(HELP_REQUEST_NOTIFIED_KEY, JSON.stringify(existing));
+      }
+    } catch (error) {
+      console.error('Failed to store notified help request id:', error);
+    }
+  },
+
+  async checkAcceptedHelpRequestNotifications(helpRequests: any[]): Promise<void> {
+    try {
+      const notifiedIds = await this.getNotifiedHelpRequestIds();
+
+      for (const request of helpRequests) {
+        const isAccepted =
+          request?.status === 'accepted' || !!request?.acceptedBy;
+
+        if (!request?._id || !isAccepted) continue;
+
+        if (notifiedIds.includes(request._id)) continue;
+
+        const acceptedByName =
+          typeof request.acceptedBy === 'object' && request.acceptedBy?.fullName
+            ? request.acceptedBy.fullName
+            : 'Another student';
+
+        await this.addToNotificationsList({
+          id: `help_request_accepted_${request._id}`,
+          title: '💬 Help Request Accepted!',
+          body: `"${request.questionTitle}" was accepted by ${acceptedByName}.`,
+          helpRequestId: request._id,
+          type: 'help_request_accepted',
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
+
+        await this.storeNotifiedHelpRequestId(request._id);
+      }
+    } catch (error) {
+      console.error('Failed to check help request notifications:', error);
+    }
   },
 
   // Add listener for notification responses
