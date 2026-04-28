@@ -15,7 +15,6 @@ exports.register = async (req, res) => {
   try {
     const { fullName, email, password, passwordConfirm } = req.body;
 
-    // Validate input
     if (!fullName || !email || !password || !passwordConfirm) {
       return res.status(400).json({
         success: false,
