@@ -28,4 +28,4 @@ const folderSchema = new mongoose.Schema({
     collection: 'personal_folders',
 });
 
-module.exports = mongoose.model('Folder', folderSchema);
+module.exports = mongoose.model('PersonalFolder', folderSchema);
