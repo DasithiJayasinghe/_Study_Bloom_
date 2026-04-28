@@ -15,7 +15,7 @@ const studyGemSchema = new mongoose.Schema({
     },
     folder: {
         type: mongoose.Schema.ObjectId,
-        ref: 'Folder',
+        ref: 'PersonalFolder',
         required: true,
     },
     user: {
@@ -33,6 +33,10 @@ const studyGemSchema = new mongoose.Schema({
         name: String,
         url: String,
         fileType: String,
+    }],
+     pollData: [{
+        optionText: String,
+        voteCount: Number,
     }],
 }, {
     timestamps: true,
