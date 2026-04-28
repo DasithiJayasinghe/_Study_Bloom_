@@ -44,8 +44,13 @@ export default function RootLayout() {
     <AuthProvider>
       <ThemeProvider value={colorScheme === 'dark' ? StudyBloomDarkTheme : StudyBloomLightTheme}>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="add-study-gem" options={{ title: 'Add Study Gem' }} />
+          <Stack.Screen name="create-folder" options={{ presentation: 'modal', title: 'Create Folder' }} />
+          <Stack.Screen name="edit-folder" options={{ title: 'Edit Folder' }} />
+          <Stack.Screen name="study-gem-details" options={{ title: 'Study Gem Details' }} />
+          <Stack.Screen name="edit-study-gem" options={{ title: 'Edit Study Gem' }} />
+          <Stack.Screen name="save-to-my-space" options={{ title: 'Save to My Space' }} />
+          <Stack.Screen name="study-journey" options={{ title: 'Study Journey' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />

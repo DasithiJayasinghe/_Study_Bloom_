@@ -5,6 +5,9 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const examRoutes = require('./routes/examRoutes');
+const personalFolderRoutes = require('./routes/personalFolderRoutes');
+const studyGemRoutes = require('./routes/studyGemRoutes');
+const sessionRoutes = require('./routes/sessionRoutes');
 const { protect } = require('./middleware/authMiddleware');
 const http = require('http');
 const { initSocket } = require('./config/socket');
@@ -36,10 +39,18 @@ console.log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
 console.log('Auth routes mounted successfully');
 
+
+
+// Study Space routes
+app.use('/api/personal-folders', personalFolderRoutes);
+app.use('/api/gems', studyGemRoutes);
+app.use('/api/sessions', sessionRoutes);
+
 // Exam routes
 console.log('Mounting exam routes at /api/exams');
 app.use('/api/exams', examRoutes);
 console.log('Exam routes mounted successfully');
+
 
 // Dev route - list all users (remove in production)
 app.get('/api/users', async (req, res) => {
