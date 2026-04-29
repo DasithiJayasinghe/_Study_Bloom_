@@ -161,6 +161,22 @@ export default function CommunityFeedScreen() {
         });
     };
 
+    const handleBookmarkPress = (post: Post) => {
+        toggleBookmark(post._id);
+        const attachmentUrl = post.fileURL ? communityService.getFileUrl(post.fileURL) : '';
+        router.push({
+            pathname: '/study-space/save-to-my-space',
+            params: {
+                title: post.title || 'Saved Community Post',
+                content: post.content || '',
+                authorName: post.user?.fullName || 'Community Member',
+                authorAvatar: post.user?.profilePicture ? communityService.getFileUrl(post.user.profilePicture) : '',
+                attachmentUrl,
+                pollData: post.type === 'poll' ? JSON.stringify(post.pollOptions) : undefined,
+            },
+        } as any);
+    };
+
     const handleVote = async (postId: string, type: 'upvote' | 'downvote') => {
         // Subtle pop feel
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -444,7 +460,7 @@ export default function CommunityFeedScreen() {
                             <MaterialCommunityIcons name="comment-outline" size={18} color={COLORS.onSurfaceVariant} />
                             <Text style={styles.commentCount}>{item.commentCount || 0}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => toggleBookmark(item._id)}>
+                        <TouchableOpacity onPress={() => handleBookmarkPress(item)}>
                             <MaterialIcons
                                 name={bookmarked.has(item._id) ? 'bookmark' : 'bookmark-border'}
                                 size={22}
