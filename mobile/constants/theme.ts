@@ -17,6 +17,7 @@ export const StudyBloomColors = {
   lightGray: '#E0E0E0',
   error: '#FF5252',
   success: '#4CAF50',
+  warning: '#FF9800',
 };
 
 export const Colors = {
