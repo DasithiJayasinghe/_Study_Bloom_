@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,12 @@ import {
   Image,
   Modal,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StudyBloomColors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { studySpaceService } from '@/services/studySpaceService';
 
 const moodMessages: Record<string, { title: string; message: string; color: string }> = {
   Happy: {
@@ -51,6 +52,28 @@ export default function HomeScreen() {
   const { user, logout, isAuthenticated, profileImage } = useAuth();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [showMoodModal, setShowMoodModal] = useState(false);
+  const [todayStudyHours, setTodayStudyHours] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchStudyStats = async () => {
+        if (isAuthenticated) {
+          try {
+            const stats = await studySpaceService.getSessionStats();
+            if (stats && typeof stats.todayTotalSeconds === 'number') {
+              setTodayStudyHours(stats.todayTotalSeconds / 3600);
+            } else {
+              setTodayStudyHours(0);
+            }
+          } catch (error) {
+            console.error('Error fetching today study stats:', error);
+          }
+        }
+      };
+      
+      fetchStudyStats();
+    }, [isAuthenticated])
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -145,7 +168,7 @@ export default function HomeScreen() {
             <View style={styles.bannerContent}>
               <View style={styles.bannerTextSection}>
                 <Text style={styles.bannerTitle}>Keep Blooming!</Text>
-                <Text style={styles.bannerSubtitle}>You're doing amazing sweetie</Text>
+                <Text style={styles.bannerSubtitle}>You're doing amazing sweetie </Text>
                 <View style={styles.streakBadge}>
                   <Ionicons name="flame" size={16} color="#FF6B6B" />
                   <Text style={styles.streakText}>0 day streak</Text>
@@ -185,7 +208,13 @@ export default function HomeScreen() {
             <View style={[styles.quickStatIcon, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="time" size={22} color="#4CAF50" />
             </View>
-            <Text style={styles.quickStatNumber}>0h</Text>
+            <Text style={styles.quickStatNumber}>
+              {todayStudyHours >= 1 
+                ? Number((todayStudyHours).toFixed(1)) + 'h'
+                : todayStudyHours > 0
+                  ? `${Math.floor(todayStudyHours * 60)}m`
+                  : '0h'}
+            </Text>
             <Text style={styles.quickStatLabel}>Study</Text>
           </View>
           <View style={styles.quickStatCard}>
@@ -310,7 +339,10 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.featureCardLarge}>
+            <TouchableOpacity 
+              style={styles.featureCardLarge}
+              onPress={() => router.push('/study-space')}
+            >
               <LinearGradient
                 colors={['#FB7185', '#EC4899']}
                 style={styles.featureLargeGradient}

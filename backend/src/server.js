@@ -6,8 +6,10 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const examRoutes = require('./routes/examRoutes');
 const { protect } = require('./middleware/authMiddleware');
+const http = require('http');
+const { initSocket } = require('./config/socket');
 
-// Load backend/.env explicitly so this works from workspace root.
+// Load backend/.env explicitly so this works from workspace root
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 const app = express();
@@ -90,12 +92,16 @@ app.use((req, res) => {
 const startServer = async () => {
   await connectDB();
 
+  const server = http.createServer(app);
+  initSocket(server);
+
   // Listen on all network interfaces (0.0.0.0) so phone can connect
-  app.listen(PORT, '0.0.0.0', () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Local: http://localhost:${PORT}`);
     console.log(`Network: http://0.0.0.0:${PORT} (use your computer's IP)`);
   });
-};
+};  
 
 startServer();
+ 

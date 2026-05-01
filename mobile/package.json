@@ -1,15 +1,19 @@
 {
-  "name": "mobile",
-  "main": "expo-router/entry",
+  "name": "student-support-app",
   "version": "1.0.0",
-  "scripts": {
-    "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "lint": "expo lint"
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
   },
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node backend/src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
